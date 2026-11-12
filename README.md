@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-# AI Data Engineering & Analytics Copilot
+
+ AI Data Engineering & Analytics Copilot
 
 Phases 1-6: FastAPI + Streamlit + PostgreSQL, migrations, least-privilege DB roles, source connectors
 (Postgres, MySQL interface, CSV, Parquet), searchable catalog + glossary, synthetic data (~412k records),
@@ -182,5 +182,5 @@ docker compose exec api alembic current
 docker compose exec api alembic check      # models and migration must agree
 ```
 =======
-# Analytics-Copilot
->>>>>>> caa3edce37d2ece6b5c778e29a4f8639f9f832e6
+Analytics-Copilot
+
