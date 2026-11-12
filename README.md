@@ -1,7 +1,7 @@
 
  AI Data Engineering & Analytics Copilot
 
-Phases 1-6: FastAPI + Streamlit + PostgreSQL, migrations, least-privilege DB roles, source connectors
+: FastAPI + Streamlit + PostgreSQL, migrations, least-privilege DB roles, source connectors
 (Postgres, MySQL interface, CSV, Parquet), searchable catalog + glossary, synthetic data (~412k records),
 two PySpark Bronze/Silver/Gold pipelines with data-quality gates and drift checks,
 a LangGraph multi-agent workflow (metadata, SQL, data quality, ETL recommendation) with an approval gate,
@@ -32,7 +32,7 @@ Open the UI from the **Ports** tab (port 8501) and the API docs at port 8000, pa
 **Windows CMD** is only needed for local steps, e.g. zipping or committing: `cd copilot`, `git init`, `git add .`, `git commit -m "phase 1"`.
 Do not run `docker compose` on your 4 GB PC.
 
-## Phase 2: load data, build the catalog, run all tests
+2: Load data, build the catalog, run all tests
 ```bash
 docker compose exec api python /seed/generate_data.py                                   # ~412k records (src.* tables + 2 files)
 docker compose exec api python -m app.cli register-sources --file /seed/sources.json
@@ -55,7 +55,7 @@ Source configs hold **no secrets**: a SQL source names an env var (`password_env
 files must live under `DATA_DIR`; hosts must be in `ALLOWED_SOURCE_HOSTS`. See `seed/sources.json`.
 MySQL: copy `seed/mysql_source.example.json`; the connector exists but has **not been tested against a live MySQL server**.
 
-## Phase 3: PySpark ETL, data quality, drift
+ 3: PySpark ETL, data quality, drift
 Needs the Phase 2 seed data. The api container applies migration 0003 on start; the `etl` service is built on first use
 (Java + PySpark, a few minutes) and is not started by `docker compose up`.
 ```bash
@@ -83,7 +83,7 @@ How a run behaves
 - **Baselines** are created by the first successful run (never by a failed one); `--reset-baseline` accepts a new normal.
 - Alerts are stored in `app.dq_alerts` (status `pending`); delivery arrives with the integrations phase.
 
-## Phase 4: LangGraph agents (details: `docs/agents.md`)
+ 4: LangGraph agents (details: `docs/agents.md`)
 Needs the Phase 3 pipelines to have run (Gold tables). Order matters the first time:
 ```bash
 docker compose up -d --build
@@ -119,8 +119,7 @@ docker compose exec api python -m app.agents.cli decide 1 approved --actor bob -
 docker compose run --rm etl python -m etl.runner run events                       # now succeeds; run details show the override
 cp /tmp/web_events.orig data/files/web_events.csv                                 # restore
 ```
-
-## Phase 5: authentication, RBAC, approval queue, integrations (details: `docs/security.md`)
+ 5: authentication, RBAC, approval queue, integrations (details: `docs/security.md`)
 Set `JWT_SECRET` (32+ characters) and `MOCK_TICKET_TOKEN` in `.env` (see `.env.example`), then:
 ```bash
 docker compose up -d --build                     # starts postgres, api, ui and the mocks service; api applies migrations 0001-0005
@@ -141,7 +140,7 @@ Interactive API docs: http://localhost:8000/docs (use the Authorize button with 
 `docs/postman_collection.json` are generated from the live app (log in once; the token is stored automatically).
 Approval separation of duties: the person who triggered a proposal cannot approve it, so use two engineer/admin accounts.
 
-## Phase 6: Streamlit app, pipeline execution, observability (details: `docs/observability.md`)
+ 6: Streamlit app, pipeline execution, observability (details: `docs/observability.md`)
 ```bash
 docker compose up -d --build                                   # postgres, api, ui, mocks
 docker compose --profile etl up -d --build etl_worker          # the worker that executes runs queued from the UI/API (builds the Spark image)
