@@ -1,0 +1,9 @@
+# Versions are the ones the ETL tests were run against.
+pyspark==4.0.1
+SQLAlchemy==2.1.5
+psycopg[binary]==3.3.6
+pydantic==2.14.1
+pydantic-settings==2.16.0
+httpx==0.28.1        # alert dispatch (integrations)
+pytest==9.1.1
+pyarrow==26.0.0      # tests only: build/read Parquet fixtures

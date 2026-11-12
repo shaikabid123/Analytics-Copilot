@@ -1,0 +1,49 @@
+[
+  {
+    "name": "retail_pg",
+    "source_type": "postgres",
+    "description": "Operational retail database (demo): customers, products, orders, order items.",
+    "config": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "copilot",
+      "username": "source_ro",
+      "password_env": "SRC_PG_PASSWORD",
+      "schemas": [
+        "src"
+      ]
+    }
+  },
+  {
+    "name": "web_events_csv",
+    "source_type": "csv",
+    "description": "Clickstream export (CSV) with anonymous and logged-in sessions.",
+    "config": {
+      "path": "files/web_events.csv",
+      "delimiter": ","
+    }
+  },
+  {
+    "name": "shipments_parquet",
+    "source_type": "parquet",
+    "description": "Carrier shipment feed (Parquet).",
+    "config": {
+      "path": "files/shipments.parquet"
+    }
+  },
+  {
+    "name": "gold_pg",
+    "source_type": "postgres",
+    "description": "Published Gold tables (daily sales, customer value, web funnel, delivery SLA) produced by the ETL pipelines.",
+    "config": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "copilot",
+      "username": "analytics_ro",
+      "password_env": "SRC_GOLD_PASSWORD",
+      "schemas": [
+        "gold"
+      ]
+    }
+  }
+]

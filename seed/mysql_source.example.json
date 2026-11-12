@@ -1,0 +1,8 @@
+{
+  "_comment": "Example only. The MySQL connector shares the SQL interface but has NOT been tested against a live server. Set SRC_MYSQL_PASSWORD in the environment; never put a password in this file.",
+  "name": "retail_mysql",
+  "source_type": "mysql",
+  "description": "Example MySQL source",
+  "config": {"host": "mysql", "port": 3306, "database": "retail", "username": "reader",
+             "password_env": "SRC_MYSQL_PASSWORD", "schemas": ["retail"]}
+}

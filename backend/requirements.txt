@@ -1,0 +1,23 @@
+# Versions below are the ones the Phase 1 tests were actually run against.
+fastapi==0.146.0
+uvicorn[standard]==0.54.0
+SQLAlchemy==2.1.5
+psycopg[binary]==3.3.6
+alembic==1.20.0
+PyJWT==2.15.1
+pydantic==2.14.1
+pydantic-settings==2.16.0
+pyarrow==26.0.0      # Parquet source connector
+PyMySQL==1.2.3   # MySQL connector driver (connector is NOT integration-tested, see HANDOFF)
+# agents (LangGraph workflow + Postgres checkpointer) and the SQL guard
+langgraph==1.2.16
+langgraph-checkpoint==4.3.0
+langgraph-checkpoint-postgres==3.2.0
+langgraph-prebuilt==1.1.1
+langchain-core==1.6.12
+psycopg-pool==3.3.3
+ormsgpack==1.13.0
+sqlglot==30.23.0
+# test tooling (kept in one file for simplicity in this prototype)
+pytest==9.1.1
+httpx==0.28.1

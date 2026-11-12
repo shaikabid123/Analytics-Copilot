@@ -1,0 +1,4 @@
+# Keep LF line endings so shell scripts work inside Linux containers (Windows checkouts!)
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf

@@ -1,0 +1,498 @@
+{
+ "datasets": {
+  "retail_pg:src.customers": {
+   "owner": "Customer Data Team",
+   "description": "One row per registered customer. Source of truth for customer attributes and segment.",
+   "columns": {
+    "customer_id": {
+     "description": "Unique customer identifier (primary key).",
+     "pii": false
+    },
+    "first_name": {
+     "description": "Customer given name.",
+     "pii": true
+    },
+    "last_name": {
+     "description": "Customer family name.",
+     "pii": true
+    },
+    "email": {
+     "description": "Contact email address, unique per customer.",
+     "pii": true
+    },
+    "phone": {
+     "description": "Contact phone number; missing for about 10% of customers.",
+     "pii": true
+    },
+    "city": {
+     "description": "City of residence.",
+     "pii": false
+    },
+    "country": {
+     "description": "Country of residence.",
+     "pii": false
+    },
+    "segment": {
+     "description": "Commercial segment: consumer, small_business or enterprise.",
+     "pii": false
+    },
+    "signup_date": {
+     "description": "Date the customer registered.",
+     "pii": false
+    }
+   }
+  },
+  "retail_pg:src.products": {
+   "owner": "Merchandising Team",
+   "description": "Product catalog with list price and unit cost.",
+   "columns": {
+    "product_id": {
+     "description": "Unique product identifier (primary key).",
+     "pii": false
+    },
+    "sku": {
+     "description": "Stock keeping unit code, unique per product.",
+     "pii": false
+    },
+    "name": {
+     "description": "Product display name.",
+     "pii": false
+    },
+    "category": {
+     "description": "Merchandising category such as Electronics or Apparel.",
+     "pii": false
+    },
+    "unit_price": {
+     "description": "Current list price per unit.",
+     "pii": false
+    },
+    "unit_cost": {
+     "description": "Cost of goods per unit; always below list price.",
+     "pii": false
+    },
+    "is_active": {
+     "description": "Whether the product is currently sold.",
+     "pii": false
+    },
+    "created_date": {
+     "description": "Date the product was added to the catalog.",
+     "pii": false
+    }
+   }
+  },
+  "retail_pg:src.orders": {
+   "owner": "Sales Operations",
+   "description": "One row per customer order with status, channel and order total.",
+   "columns": {
+    "order_id": {
+     "description": "Unique order identifier (primary key).",
+     "pii": false
+    },
+    "customer_id": {
+     "description": "Customer who placed the order (references customers).",
+     "pii": false
+    },
+    "order_ts": {
+     "description": "Timestamp when the order was placed.",
+     "pii": false
+    },
+    "status": {
+     "description": "Order lifecycle status: processing, shipped, delivered, cancelled or returned.",
+     "pii": false
+    },
+    "channel": {
+     "description": "Sales channel: web, mobile or store.",
+     "pii": false
+    },
+    "total_amount": {
+     "description": "Order total: sum of quantity times unit price over the order's items.",
+     "pii": false
+    }
+   }
+  },
+  "retail_pg:src.order_items": {
+   "owner": "Sales Operations",
+   "description": "Order line items: which products were bought on which order.",
+   "columns": {
+    "order_item_id": {
+     "description": "Unique line item identifier (primary key).",
+     "pii": false
+    },
+    "order_id": {
+     "description": "Parent order (references orders).",
+     "pii": false
+    },
+    "product_id": {
+     "description": "Product bought (references products).",
+     "pii": false
+    },
+    "quantity": {
+     "description": "Units bought on this line.",
+     "pii": false
+    },
+    "unit_price": {
+     "description": "Price per unit at the time of purchase.",
+     "pii": false
+    }
+   }
+  },
+  "web_events_csv:file.web_events": {
+   "owner": "Digital Analytics",
+   "description": "Website clickstream events from the CSV export; about a third are anonymous visitors.",
+   "columns": {
+    "event_id": {
+     "description": "Unique event identifier.",
+     "pii": false
+    },
+    "session_id": {
+     "description": "Browser session the event belongs to.",
+     "pii": false
+    },
+    "customer_id": {
+     "description": "Logged-in customer if known; empty for anonymous visitors.",
+     "pii": true
+    },
+    "event_type": {
+     "description": "page_view, product_view, add_to_cart, checkout_start or purchase.",
+     "pii": false
+    },
+    "product_id": {
+     "description": "Product involved for product_view and add_to_cart events; otherwise empty.",
+     "pii": false
+    },
+    "event_ts": {
+     "description": "When the event happened (ISO timestamp).",
+     "pii": false
+    },
+    "device": {
+     "description": "desktop, mobile or tablet.",
+     "pii": false
+    }
+   }
+  },
+  "shipments_parquet:file.shipments": {
+   "owner": "Logistics",
+   "description": "Carrier shipment records for shipped, delivered and returned orders.",
+   "columns": {
+    "shipment_id": {
+     "description": "Unique shipment identifier.",
+     "pii": false
+    },
+    "order_id": {
+     "description": "Order being shipped (references orders).",
+     "pii": false
+    },
+    "carrier": {
+     "description": "Carrier handling the shipment.",
+     "pii": false
+    },
+    "shipped_at": {
+     "description": "When the carrier received the parcel.",
+     "pii": false
+    },
+    "delivered_at": {
+     "description": "When the parcel was delivered; empty while still in transit.",
+     "pii": false
+    },
+    "status": {
+     "description": "Shipment status mirrored from the order: shipped, delivered or returned.",
+     "pii": false
+    }
+   }
+  },
+  "gold_pg:gold.daily_sales": {
+   "owner": "Sales Operations",
+   "description": "Daily order totals per sales channel: orders, items, units, gross and net revenue, cancellations, returns and return rate. Source: sales pipeline.",
+   "columns": {
+    "order_date": {
+     "description": "Calendar day the orders were placed.",
+     "pii": false
+    },
+    "channel": {
+     "description": "Sales channel: web, mobile or store.",
+     "pii": false
+    },
+    "orders": {
+     "description": "Number of orders placed that day in the channel.",
+     "pii": false
+    },
+    "items": {
+     "description": "Number of order lines.",
+     "pii": false
+    },
+    "units": {
+     "description": "Total units sold.",
+     "pii": false
+    },
+    "gross_merchandise_value": {
+     "description": "Sum of order totals before returns and cancellations.",
+     "pii": false
+    },
+    "net_revenue": {
+     "description": "Sum of order totals excluding cancelled and returned orders.",
+     "pii": false
+    },
+    "cancelled_orders": {
+     "description": "Orders with status cancelled.",
+     "pii": false
+    },
+    "returned_orders": {
+     "description": "Orders with status returned.",
+     "pii": false
+    },
+    "avg_order_value": {
+     "description": "Gross merchandise value divided by orders.",
+     "pii": false
+    },
+    "return_rate": {
+     "description": "Returned orders divided by orders (0 to 1).",
+     "pii": false
+    },
+    "_run_id": {
+     "description": "Pipeline run that produced this row (lineage).",
+     "pii": false
+    }
+   },
+   "optional": true
+  },
+  "gold_pg:gold.customer_value": {
+   "owner": "Customer Data Team",
+   "description": "One row per customer with order count, net lifetime value, first and last order dates and activity flag. Source: sales pipeline.",
+   "columns": {
+    "customer_id": {
+     "description": "Customer identifier.",
+     "pii": false
+    },
+    "segment": {
+     "description": "Commercial segment: consumer, small_business or enterprise.",
+     "pii": false
+    },
+    "country": {
+     "description": "Customer country.",
+     "pii": false
+    },
+    "orders": {
+     "description": "Number of orders placed (0 if none).",
+     "pii": false
+    },
+    "lifetime_value": {
+     "description": "Sum of order totals excluding cancelled and returned orders.",
+     "pii": false
+    },
+    "first_order_date": {
+     "description": "Date of the first order.",
+     "pii": false
+    },
+    "last_order_date": {
+     "description": "Date of the most recent order.",
+     "pii": false
+    },
+    "avg_order_value": {
+     "description": "Lifetime value divided by orders; empty when there are no orders.",
+     "pii": false
+    },
+    "is_active_90d": {
+     "description": "True when the last order is within 90 days of the latest order date in the data.",
+     "pii": false
+    },
+    "_run_id": {
+     "description": "Pipeline run that produced this row (lineage).",
+     "pii": false
+    }
+   },
+   "optional": true
+  },
+  "gold_pg:gold.funnel_daily": {
+   "owner": "Digital Analytics",
+   "description": "Daily web funnel per device: sessions, page views, product views, add to cart, checkout starts, purchases and conversion rates. Source: events pipeline.",
+   "columns": {
+    "event_date": {
+     "description": "Calendar day of the events.",
+     "pii": false
+    },
+    "device": {
+     "description": "desktop, mobile or tablet.",
+     "pii": false
+    },
+    "sessions": {
+     "description": "Distinct sessions with at least one event.",
+     "pii": false
+    },
+    "page_views": {
+     "description": "Page view events.",
+     "pii": false
+    },
+    "product_views": {
+     "description": "Product view events.",
+     "pii": false
+    },
+    "add_to_carts": {
+     "description": "Add to cart events.",
+     "pii": false
+    },
+    "checkout_starts": {
+     "description": "Checkout start events.",
+     "pii": false
+    },
+    "purchases": {
+     "description": "Purchase events.",
+     "pii": false
+    },
+    "view_to_cart_rate": {
+     "description": "Add to carts divided by product views.",
+     "pii": false
+    },
+    "cart_to_purchase_rate": {
+     "description": "Purchases divided by add to carts.",
+     "pii": false
+    },
+    "purchase_rate": {
+     "description": "Purchases divided by sessions.",
+     "pii": false
+    },
+    "_run_id": {
+     "description": "Pipeline run that produced this row (lineage).",
+     "pii": false
+    }
+   },
+   "optional": true
+  },
+  "gold_pg:gold.delivery_sla": {
+   "owner": "Logistics",
+   "description": "Monthly delivery performance per carrier: shipments, deliveries, lead times and share delivered within the SLA. Source: events pipeline.",
+   "columns": {
+    "ship_month": {
+     "description": "First day of the month the parcels were shipped.",
+     "pii": false
+    },
+    "carrier": {
+     "description": "Carrier handling the shipments.",
+     "pii": false
+    },
+    "shipments": {
+     "description": "Shipments handed to the carrier.",
+     "pii": false
+    },
+    "delivered": {
+     "description": "Shipments delivered.",
+     "pii": false
+    },
+    "avg_lead_days": {
+     "description": "Average days from shipped to delivered.",
+     "pii": false
+    },
+    "p90_lead_days": {
+     "description": "90th percentile of lead days.",
+     "pii": false
+    },
+    "on_time_pct": {
+     "description": "Percent of delivered shipments within the SLA days.",
+     "pii": false
+    },
+    "sla_days": {
+     "description": "SLA threshold in days.",
+     "pii": false
+    },
+    "_run_id": {
+     "description": "Pipeline run that produced this row (lineage).",
+     "pii": false
+    }
+   },
+   "optional": true
+  }
+ },
+ "glossary": [
+  {
+   "term": "Gross merchandise value",
+   "definition": "Total value of orders placed before returns and cancellations. In this catalog it is the sum of order total_amount.",
+   "columns": [
+    "retail_pg:src.orders.total_amount",
+    "gold_pg:gold.daily_sales.gross_merchandise_value"
+   ]
+  },
+  {
+   "term": "Average order value",
+   "definition": "Gross merchandise value divided by the number of orders in the same period.",
+   "columns": [
+    "retail_pg:src.orders.total_amount",
+    "retail_pg:src.orders.order_id"
+   ]
+  },
+  {
+   "term": "Customer segment",
+   "definition": "Commercial grouping of a customer: consumer, small business or enterprise.",
+   "columns": [
+    "retail_pg:src.customers.segment"
+   ]
+  },
+  {
+   "term": "Order status",
+   "definition": "Stage of an order in its lifecycle: processing, shipped, delivered, cancelled or returned.",
+   "columns": [
+    "retail_pg:src.orders.status",
+    "shipments_parquet:file.shipments.status"
+   ]
+  },
+  {
+   "term": "Return rate",
+   "definition": "Share of orders whose status is returned.",
+   "columns": [
+    "retail_pg:src.orders.status",
+    "gold_pg:gold.daily_sales.return_rate"
+   ]
+  },
+  {
+   "term": "SKU",
+   "definition": "Stock keeping unit: the unique code identifying a sellable product.",
+   "columns": [
+    "retail_pg:src.products.sku"
+   ]
+  },
+  {
+   "term": "Gross margin",
+   "definition": "Unit price minus unit cost for a product, usually shown as a percentage of price.",
+   "columns": [
+    "retail_pg:src.products.unit_price",
+    "retail_pg:src.products.unit_cost"
+   ]
+  },
+  {
+   "term": "Anonymous visitor",
+   "definition": "A web session with no known customer; customer_id is empty in the clickstream.",
+   "columns": [
+    "web_events_csv:file.web_events.customer_id"
+   ]
+  },
+  {
+   "term": "Conversion",
+   "definition": "A web session that ends in a purchase event, measured against sessions with product views.",
+   "columns": [
+    "web_events_csv:file.web_events.event_type",
+    "web_events_csv:file.web_events.session_id"
+   ]
+  },
+  {
+   "term": "Delivery lead time",
+   "definition": "Days between a shipment being shipped and delivered.",
+   "columns": [
+    "shipments_parquet:file.shipments.shipped_at",
+    "shipments_parquet:file.shipments.delivered_at",
+    "gold_pg:gold.delivery_sla.avg_lead_days"
+   ]
+  },
+  {
+   "term": "Customer lifetime value",
+   "definition": "Total net revenue a customer has generated: order totals excluding cancelled and returned orders.",
+   "columns": [
+    "gold_pg:gold.customer_value.lifetime_value"
+   ]
+  },
+  {
+   "term": "On-time delivery",
+   "definition": "Share of delivered shipments that arrived within the SLA number of days.",
+   "columns": [
+    "gold_pg:gold.delivery_sla.on_time_pct"
+   ]
+  }
+ ]
+}

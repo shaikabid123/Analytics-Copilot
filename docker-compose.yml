@@ -1,0 +1,153 @@
+name: copilot
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_RW_PASSWORD: ${APP_RW_PASSWORD}
+      ETL_RW_PASSWORD: ${ETL_RW_PASSWORD}
+      ANALYTICS_RO_PASSWORD: ${ANALYTICS_RO_PASSWORD}
+      SOURCE_RO_PASSWORD: ${SOURCE_RO_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs only when the pgdata volume is first created (see README "reset").
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql+psycopg://app_rw:${APP_RW_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ETL_URL: postgresql+psycopg://etl_rw:${ETL_RW_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ANALYTICS_RO_URL: postgresql+psycopg://analytics_ro:${ANALYTICS_RO_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      SRC_PG_PASSWORD: ${SOURCE_RO_PASSWORD}   # referenced by name (password_env) from source configs
+      SRC_GOLD_PASSWORD: ${ANALYTICS_RO_PASSWORD}
+      DATA_DIR: /data
+      REPO_ROOT: /repo
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env (at least 32 characters)}
+      ALLOW_SELF_APPROVAL: ${ALLOW_SELF_APPROVAL:-false}
+      ALERT_WEBHOOK_URL: http://mocks:9000/slack/webhook
+      TICKET_API_URL: http://mocks:9000/tickets/api
+      TICKET_API_TOKEN: ${MOCK_TICKET_TOKEN}
+      LLM_PROVIDER: ${LLM_PROVIDER:-none}
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:3b}
+      OLLAMA_TIMEOUT_S: ${OLLAMA_TIMEOUT_S:-120}
+    volumes:
+      - ./backend:/app   # dev convenience: live code + tests inside the container
+      - ./seed:/seed:ro
+      - ./data:/data
+      - ./ui:/repo/ui:ro
+      - ./docker-compose.yml:/repo/docker-compose.yml:ro
+      - ./docker:/repo/docker:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  ui:
+    build:
+      context: .
+      dockerfile: docker/ui.Dockerfile
+    environment:
+      API_URL: http://api:8000
+    volumes:
+      - ./ui:/app
+    depends_on:
+      - api
+    ports:
+      - "8501:8501"
+
+  # MOCK Slack-style webhook + Jira-style ticket API (not real services). Failure modes: POST /control
+  mocks:
+    build:
+      context: .
+      dockerfile: docker/mocks.Dockerfile
+    environment:
+      MOCK_TICKET_TOKEN: ${MOCK_TICKET_TOKEN}
+    ports:
+      - "9000:9000"
+
+  # Optional local LLM (Ollama). Not started by `docker compose up`:
+  #   docker compose --profile llm up -d ollama && docker compose exec ollama ollama pull qwen2.5-coder:3b
+  ollama:
+    profiles: ["llm"]
+    image: ollama/ollama:latest
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+
+  # Spark ETL. Not started by `docker compose up` (profile); run on demand:
+  #   docker compose run --rm etl python -m etl.runner run sales
+  etl:
+    profiles: ["etl"]
+    build:
+      context: .
+      dockerfile: docker/etl.Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      DATABASE_URL: postgresql+psycopg://app_rw:${APP_RW_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ETL_URL: postgresql+psycopg://etl_rw:${ETL_RW_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ANALYTICS_RO_URL: postgresql+psycopg://analytics_ro:${ANALYTICS_RO_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      SRC_PG_PASSWORD: ${SOURCE_RO_PASSWORD}
+      DATA_DIR: /data
+      SPARK_DRIVER_MEMORY: ${SPARK_DRIVER_MEMORY:-1g}
+      ALERT_WEBHOOK_URL: http://mocks:9000/slack/webhook
+      TICKET_API_URL: http://mocks:9000/tickets/api
+      TICKET_API_TOKEN: ${MOCK_TICKET_TOKEN}
+    volumes:
+      - ./etl:/work/etl
+      - ./backend:/work/backend
+      - ./data:/data
+      - ./pytest.ini:/work/pytest.ini:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Long-running worker: claims runs QUEUED by the API/UI ('Run now', 'Retry') and executes them with Spark.
+  #   docker compose --profile etl up -d etl_worker
+  etl_worker:
+    profiles: ["etl"]
+    restart: unless-stopped
+    command: ["python", "-m", "etl.worker"]
+    build:
+      context: .
+      dockerfile: docker/etl.Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      DATABASE_URL: postgresql+psycopg://app_rw:${APP_RW_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ETL_URL: postgresql+psycopg://etl_rw:${ETL_RW_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ANALYTICS_RO_URL: postgresql+psycopg://analytics_ro:${ANALYTICS_RO_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      SRC_PG_PASSWORD: ${SOURCE_RO_PASSWORD}
+      DATA_DIR: /data
+      SPARK_DRIVER_MEMORY: ${SPARK_DRIVER_MEMORY:-1g}
+      ALERT_WEBHOOK_URL: http://mocks:9000/slack/webhook
+      TICKET_API_URL: http://mocks:9000/tickets/api
+      TICKET_API_TOKEN: ${MOCK_TICKET_TOKEN}
+    volumes:
+      - ./etl:/work/etl
+      - ./backend:/work/backend
+      - ./data:/data
+      - ./pytest.ini:/work/pytest.ini:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  ollama:

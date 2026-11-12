@@ -1,0 +1,4 @@
+# Extra packages to run the Streamlit workflow tests (tests_ui/) next to the backend: pip install -r requirements-uitest.txt
+-r requirements.txt
+streamlit==1.66.0
+pandas==3.0.6
